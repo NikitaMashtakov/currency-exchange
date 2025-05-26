@@ -1,98 +1,63 @@
-import { action, autorun, computed, makeObservable, observable } from 'mobx';
-
-type Currency = {
-  label: string;
-  name: string;
-};
-
-type Pair = {
-  base_code: string;
-  target_code: string;
-  conversion_rate: number;
-};
+import {
+  action,
+  autorun,
+  computed,
+  flow,
+  makeAutoObservable,
+  makeObservable,
+  observable,
+} from 'mobx';
+import { getAllCurrencies, getPairRate } from './api/httpClient';
+import type { Currency, Pair as Rate } from './types/types';
 
 class CurrenciesStore {
   allCurrencies: Currency[] = [];
-  pairs: Pair[] = [];
+  rates: Rate[] = [];
+  pairsToShow: Rate[] = [];
+
   constructor() {
-    makeObservable(this, {
-      allCurrencies: observable,
-      pairs: observable,
-      addPair: action,
-    });
+    makeAutoObservable(this, {}, { autoBind: true });
     autorun(() =>
-      fetch(`https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/codes`)
-        .then((response) => response.json())
-        .then((result) => {
-          const gotCurrencies = result.supported_codes.map((code: string[]) => ({
-            label: code[0],
-            name: code[1],
-          }));
-          // console.log(gotCurrencies);
-          this.allCurrencies = [...gotCurrencies];
-          // console.log(allCurrencies);
-          // const op = allCurrencies.map((currency) => currency.label);
-          // setOptions(op);
-        }),
+      getAllCurrencies().then((gotCurrencies) => this.setAllCurrencies(gotCurrencies)),
     );
   }
 
-  // get completedTodosCount() {
-  //   return this.todos.filter((todo) => todo.completed === true).length;
-  // }
+  get options() {
+    return this.allCurrencies.map((currency) => currency.label);
+  }
 
-  // get g() {
-  //   if (this.todos.length === 0) return '<none>';
-  //   const nextTodo = this.todos.find((todo) => todo.completed === false);
-  //   return (
-  //     `Next todo: "${nextTodo ? nextTodo.task : '<none>'}". ` +
-  //     `Progress: ${this.completedTodosCount}/${this.todos.length}`
-  //   );
-  // }
-  addPair(base: string, target: string) {
-    console.log(this.pairs);
-    const existedPair = this.pairs.find(
-      (pair) => pair?.base_code === base && pair?.target_code === target,
+  get allRates() {
+    return this.rates.slice().map((pair) => ({ ...pair }));
+  }
+
+  setAllCurrencies = (newState: Currency[]) => {
+    this.allCurrencies = [...newState];
+  };
+
+  addRate = (newRate: Rate) => {
+    this.rates = [...this.rates, newRate];
+  };
+
+  updateRate = (index: number, rate: number) => {
+    this.rates[index].conversion_rate = rate;
+  };
+
+  newRate(base: string, target: string) {
+    const existedRateIndex = this.rates.findIndex(
+      (rate) => rate.base_code === base && rate.target_code === target,
     );
-    let newPair: Pair;
-    if (!existedPair) {
-      fetch(
-        `https://v6.exchangerate-api.com/v6/${
-          import.meta.env.VITE_API_KEY
-        }/pair/${base}/${target}`,
-      )
-        .then((response) => response.json())
-        .then((result) => {
-          newPair = {
-            base_code: result.base_code,
-            target_code: result.target_code,
-            conversion_rate: result.conversion_rate,
-          };
-          this.pairs = [...this.pairs, newPair];
-        });
+    console.log(existedRateIndex);
+    if (existedRateIndex === -1) {
+      getPairRate(base, target).then((gotPair) => {
+        this.addRate(gotPair);
+        console.log('нет пары', this.rates);
+      });
     } else {
-      fetch(
-        `https://v6.exchangerate-api.com/v6/${
-          import.meta.env.VITE_API_KEY
-        }/pair/${base}/${target}`,
-      )
-        .then((response) => response.json())
-        .then((result) => {
-          newPair = {
-            ...existedPair,
-            conversion_rate: result.conversion_rate,
-          };
-          this.pairs = [...this.pairs, newPair];
-        });
+      getPairRate(base, target).then((gotPair) => {
+        this.updateRate(existedRateIndex, gotPair.conversion_rate);
+        console.log('есть пара', this.rates);
+      });
     }
   }
-  // addTodo(task) {
-  //   this.todos.push({
-  //     task: task,
-  //     completed: false,
-  //     assignee: null,
-  //   });
-  // }
 }
-
 export const currenciesStore = new CurrenciesStore();
