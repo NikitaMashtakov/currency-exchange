@@ -27,13 +27,16 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
     amount: 0,
   });
 
-  const { options, newRate, findRateIndex, allRates, deleteUserPair } = currenciesStore;
+  const { options, newRate, findRateIndex, allRates, updateUserPair, deleteUserPair } =
+    currenciesStore;
 
   // console.log('pairs', allPairs);
 
   useEffect(() => {
     if (firstCurrency.value && secondCurrency.value) {
       newRate(firstCurrency.value, secondCurrency.value);
+      updateUserPair(pair.id, firstCurrency.value, secondCurrency.value);
+      //
       console.log('effect', pair.id);
     }
   }, [firstCurrency.value, secondCurrency.value]);
@@ -41,11 +44,11 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
   const pairRate = useMemo(() => {
     if (firstCurrency.value && secondCurrency.value) {
       const index = findRateIndex(firstCurrency.value, secondCurrency.value);
-      console.log('memo', index);
+      // console.log('memo', index);
       return allRates[index];
     }
   }, [allRates]);
-  console.log(`render ${pair.id}`);
+  // console.log(`render ${pair.id}`);
   return (
     <div
       style={{

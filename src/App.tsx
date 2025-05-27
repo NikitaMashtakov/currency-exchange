@@ -6,13 +6,14 @@ import Button from '@mui/material/Button';
 import { observer } from 'mobx-react-lite';
 
 export const App = observer(() => {
-  const { userPairs, newUserPair } = currenciesStore;
-
+  const { allUserPairs, newUserPair } = currenciesStore;
+  console.log('all', allUserPairs);
   return (
     <>
-      {userPairs.map((pair) => (
-        <PairElement key={pair.id} pair={pair} />
-      ))}
+      {allUserPairs.map((pair) => {
+        console.log('pair id', pair);
+        return <PairElement key={pair.id} pair={pair} />;
+      })}
       <Button onClick={newUserPair}>добавить</Button>
     </>
   );
