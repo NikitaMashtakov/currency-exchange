@@ -1,21 +1,21 @@
 import type { FC } from 'react';
 import styles from './App.module.css';
-import Pair from './components/Pair/Pair';
+import PairElement from './components/Pair/PairElement';
 import { currenciesStore } from './store';
+import Button from '@mui/material/Button';
+import { observer } from 'mobx-react-lite';
 
-function App() {
-  const {
-    allCurrencies,
-    rates: pairs,
-    newRate: newPair,
-    allRates: allPairs,
-  } = currenciesStore;
+export const App = observer(() => {
+  const { userPairs, newUserPair } = currenciesStore;
 
-  // const options = useMemo(
-  //   () => allCurrencies.map((currency) => currency.label),
-  //   [allCurrencies],
-  // );
-  return <Pair />;
-}
+  return (
+    <>
+      {userPairs.map((pair) => (
+        <PairElement key={pair.id} pair={pair} />
+      ))}
+      <Button onClick={newUserPair}>добавить</Button>
+    </>
+  );
+});
 
 export default App;
