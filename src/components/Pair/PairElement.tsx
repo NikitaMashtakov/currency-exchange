@@ -27,25 +27,50 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
     amount: 0,
   });
 
-  const { options, newRate, findRateIndex, allRates, deleteUserPair } = currenciesStore;
+  const {
+    options,
+    newRate,
+    findRateIndex,
+    allRates,
+    deleteUserPair,
+    updateUserPair,
+    allPairs,
+  } = currenciesStore;
 
   // console.log('pairs', allPairs);
-
-  useEffect(() => {
-    if (firstCurrency.value && secondCurrency.value) {
-      newRate(firstCurrency.value, secondCurrency.value);
-      console.log('effect', pair.id);
+  const updateExchange = async (first: string | null, second: string | null) => {
+    if (first && second) {
+      await newRate(first, second);
+      await updateUserPair(pair.id, first, second);
+      if (pairRate) {
+        setSecondCurrency((prev) => ({
+          ...prev,
+          amount: Number((firstCurrency.amount * pairRate.conversion_rate).toFixed(2)),
+        }));
+      }
     }
+  };
+  useEffect(() => {
+    updateExchange(firstCurrency.value, secondCurrency.value);
+    // if (firstCurrency.value && secondCurrency.value) {
+    // newRate(firstCurrency.value, secondCurrency.value);
+    // updateUserPair(pair.id, firstCurrency.value, secondCurrency.value);
+    // setSecondCurrency((prev) => ({
+    //   ...prev,
+    //   amount: firstCurrency.amount * pairRate.conversion_rate.toFixed(2),
+    // }));
+    // console.log('effect', pair.id);
+    // }
   }, [firstCurrency.value, secondCurrency.value]);
 
   const pairRate = useMemo(() => {
     if (firstCurrency.value && secondCurrency.value) {
       const index = findRateIndex(firstCurrency.value, secondCurrency.value);
-      console.log('memo', index);
+      console.log('memo', pair.id);
       return allRates[index];
     }
   }, [allRates]);
-  console.log(`render ${pair.id}`);
+
   return (
     <div
       style={{
@@ -60,9 +85,12 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
         id="first-amount"
         label="Сумма"
         value={firstCurrency.amount}
-        type="number"
         onChange={({ target }: React.ChangeEvent<HTMLInputElement>) => {
-          if (pairRate) {
+          if (target.value === '') {
+            setFirstCurrency((prev) => ({ ...prev, amount: 0 }));
+          }
+
+          if (pairRate && Number(target.value)) {
             setFirstCurrency((prev) => ({ ...prev, amount: Number(target.value) }));
             setSecondCurrency((prev) => ({
               ...prev,
@@ -105,10 +133,12 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
       <TextField
         id="second-amount"
         label="Сумма"
-        type="number"
         value={secondCurrency.amount}
         onChange={({ target }: React.ChangeEvent<HTMLInputElement>) => {
-          if (pairRate) {
+          if (target.value === '') {
+            setSecondCurrency((prev) => ({ ...prev, amount: 0 }));
+          }
+          if (pairRate && Number(target.value)) {
             setSecondCurrency((prev) => ({ ...prev, amount: Number(target.value) }));
             setFirstCurrency((prev) => ({
               ...prev,
