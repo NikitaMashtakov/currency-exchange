@@ -12,3 +12,9 @@ export type Pair = {
   base_code: string;
   target_code: string;
 };
+
+export type RateRequest = {
+  id: number;
+  base_code: string;
+  target_code: string;
+};
