@@ -1,19 +1,25 @@
+import { countryCodes } from '../constants/codes';
+
 export const getAllCurrencies = () => {
   return fetch(`https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/codes`)
     .then((response) => response.json())
     .then((result) =>
-      result.supported_codes.map((code: string[]) => ({
-        label: code[0],
-        name: code[1],
-      })),
-    );
-  // .catch((e) => {
-  //   if (typeof e === 'string') {
-  //     console.log(e);
-  //   } else if (e instanceof Error) {
-  //     console.log(e.message);
-  //   }
-  // });
+      result.supported_codes.map((element: string[]) => {
+        const country = countryCodes.find((code) => code.label === element[0]);
+        return {
+          label: element[0],
+          name: element[1],
+          code: country,
+        };
+      }),
+    )
+    .catch((e) => {
+      if (typeof e === 'string') {
+        console.log(e);
+      } else if (e instanceof Error) {
+        console.log(e.message);
+      }
+    });
 };
 
 export const getPairRate = (base: string, target: string) => {
@@ -27,12 +33,12 @@ export const getPairRate = (base: string, target: string) => {
       base_code: result.base_code,
       target_code: result.target_code,
       conversion_rate: result.conversion_rate,
-    }));
-  // .catch((e) => {
-  //   if (typeof e === 'string') {
-  //     console.log(e);
-  //   } else if (e instanceof Error) {
-  //     console.log(e.message);
-  //   }
-  // });
+    }))
+    .catch((e) => {
+      if (typeof e === 'string') {
+        console.log(e);
+      } else if (e instanceof Error) {
+        console.log(e.message);
+      }
+    });
 };

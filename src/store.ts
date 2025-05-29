@@ -1,34 +1,39 @@
 import { autorun, makeAutoObservable, toJS } from 'mobx';
-import { getAllCurrencies, getPairRate } from './api/httpClient';
+import { getAllCurrencies } from './api/httpClient';
 import type { Currency, Rate, Pair, RateRequest } from './types/types';
+
 const initialPairs: Pair[] = [
   { id: 0, base_code: 'RUB', target_code: 'USD' },
   { id: 1, base_code: 'RUB', target_code: 'EUR' },
 ];
 class CurrenciesStore {
-  allCurrencies: Currency[] = [];
+  currencies: Currency[] = [];
   rates: Rate[] = [];
   userPairs: Pair[] = [];
-  // private nextId: number = Date.now();
   pendingRequests: RateRequest[] = [];
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
-    getAllCurrencies().then((gotCurrencies) => this.setAllCurrencies(gotCurrencies));
     this.initPairs();
-    console.log('pairs in constructor', toJS(this.userPairs));
     autorun(() => {
       sessionStorage.setItem('userPairs', JSON.stringify(this.userPairs));
     });
   }
+
+  async initStore() {
+    const receivedData = await getAllCurrencies();
+    this.setCurrencies(receivedData);
+  }
+
   initPairs() {
     if (!sessionStorage.getItem('userPairs')) {
       sessionStorage.setItem('userPairs', JSON.stringify(initialPairs));
     }
     this.userPairs = JSON.parse(sessionStorage.getItem('userPairs') || '');
   }
+
   get options() {
-    return this.allCurrencies.map((currency) => currency.label);
+    return this.currencies.map((currency) => currency.label);
   }
 
   get allRates() {
@@ -39,8 +44,8 @@ class CurrenciesStore {
     return toJS(this.userPairs);
   }
 
-  setAllCurrencies = (newState: Currency[]) => {
-    this.allCurrencies = [...newState];
+  setCurrencies = (newState: Currency[]) => {
+    this.currencies = [...newState];
   };
 
   addRate = (newRate: Rate) => {
@@ -51,53 +56,26 @@ class CurrenciesStore {
     this.rates[index].conversion_rate = rate;
   };
 
-  getCurrentRate(base: string, target: string) {
+  updateRatesList(rate: Rate) {
     const existedRateIndex = this.rates.findIndex(
-      (rate) => rate.base_code === base && rate.target_code === target,
+      (el) => rate.base_code === el.base_code && rate.target_code === el.target_code,
     );
-    const existedRequestIndex = this.pendingRequests.findIndex(
-      (request) => request.base_code === base && request.target_code === target,
-    );
-
-    console.log(existedRateIndex);
-
-    if (existedRateIndex === -1 && existedRequestIndex === -1) {
-      const reqId = Date.now();
-      this.pendingRequests.push({ id: reqId, base_code: base, target_code: target });
-      getPairRate(base, target).then((gotPair) => {
-        this.addRate(gotPair);
-
-        const index = this.pendingRequests.findIndex((req) => req.id === reqId);
-        if (index !== -1) {
-          this.pendingRequests.splice(index, 1);
-        }
-
-        console.log('нет пары', this.allRates);
-        return gotPair;
-      });
-    } else if (existedRateIndex === -1 && existedRequestIndex !== -1) {
-      return;
+    if (existedRateIndex === -1) {
+      this.addRate(rate);
+      console.log('нет пары', this.allRates);
     } else {
-      getPairRate(base, target).then((gotPair) => {
-        this.updateRate(existedRateIndex, gotPair.conversion_rate);
-        console.log('есть пара', this.allRates);
-        return gotPair;
-      });
+      this.updateRate(existedRateIndex, rate.conversion_rate);
+      console.log('есть пара', this.allRates);
     }
   }
 
   findRateIndex(base: string, target: string) {
-    // const index = this.pendingRequests.findIndex(
-    //   (req) => req.base_code === base && req.target_code === target,
-    // );
-    // if (index !== -1) {
     return this.rates.findIndex(
       (rate) => rate.base_code === base && rate.target_code === target,
     );
-    // }
   }
 
-  newUserPair() {
+  addUserPair() {
     this.userPairs = [
       ...this.userPairs,
       { id: Date.now(), base_code: '', target_code: '' },
