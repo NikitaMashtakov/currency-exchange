@@ -152,7 +152,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
           sx={{ width: 200 }}
           value={options.find((option) => option.code === firstCurrency.code) || null}
           inputValue={firstCurrency.inputValue}
-          onChange={(event, newValue: Currency | null) => {
+          onChange={(_, newValue: Currency | null) => {
             if (newValue) {
               setFirstCurrency((prev: CurrencyState) => ({
                 ...prev,
@@ -162,7 +162,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
               setFirstCurrency((prev: CurrencyState) => ({ ...prev, code: '' }));
             }
           }}
-          onInputChange={(event, newInputValue) => {
+          onInputChange={(_, newInputValue) => {
             setFirstCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
           }}
           renderOption={(props, option) => {
@@ -238,7 +238,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
           sx={{ width: 200 }}
           value={options.find((option) => option.code === secondCurrency.code) || null}
           inputValue={secondCurrency.inputValue}
-          onChange={(event, newValue: Currency | null) => {
+          onChange={(_, newValue: Currency | null) => {
             if (newValue) {
               setSecondCurrency((prev: CurrencyState) => ({
                 ...prev,
@@ -248,7 +248,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
               setSecondCurrency((prev: CurrencyState) => ({ ...prev, code: '' }));
             }
           }}
-          onInputChange={(event, newInputValue) => {
+          onInputChange={(_, newInputValue) => {
             setSecondCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
           }}
           renderOption={(props, option) => {
