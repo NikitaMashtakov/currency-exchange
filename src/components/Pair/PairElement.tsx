@@ -115,7 +115,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        padding: '10px',
+        padding: '20px 10px',
         maxWidth: '100%',
         width: '100%',
       }}
