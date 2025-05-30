@@ -93,7 +93,16 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
       }
       setIsLoading(false);
     }
-  }, [firstCurrency.code, secondCurrency.code]);
+    //чтобы на каждое нажатие не отрабатывал useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    firstCurrency.code,
+    secondCurrency.code,
+    findRateIndex,
+    pair.id,
+    updateRatesList,
+    updateUserPair,
+  ]);
 
   useEffect(() => {
     updateExchange();
