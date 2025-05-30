@@ -1,6 +1,7 @@
 .container {
   margin: auto;
   margin-top: 20px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -9,4 +10,15 @@
 
 .header {
   margin: auto;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  @media (width<1000px) {
+    display: flex;
+    flex-direction: column;
+  }
 }

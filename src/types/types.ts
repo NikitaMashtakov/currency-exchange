@@ -1,6 +1,7 @@
 export type Currency = {
   label: string;
   name: string;
+  code: string;
 };
 
 export type Rate = {
@@ -19,4 +20,9 @@ export type RateRequest = {
   id: number;
   base_code: string;
   target_code: string;
+};
+
+export type CountryCode = {
+  code: string;
+  label: string;
 };

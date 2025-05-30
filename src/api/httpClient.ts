@@ -4,12 +4,12 @@ export const getAllCurrencies = () => {
   return fetch(`https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/codes`)
     .then((response) => response.json())
     .then((result) =>
-      result.supported_codes.map((element: string[]) => {
-        const country = countryCodes.find((code) => code.label === element[0]);
+      result.supported_codes.map((supportedCode: string[]) => {
+        const country = countryCodes.find((code) => code.code === supportedCode[0]);
         return {
-          label: element[0],
-          name: element[1],
-          code: country,
+          code: supportedCode[0],
+          name: supportedCode[1],
+          label: country?.label || '', //так как не все флаги есть, может быть пустое значение
         };
       }),
     )

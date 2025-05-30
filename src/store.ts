@@ -25,6 +25,7 @@ class CurrenciesStore {
     this.setCurrencies(receivedData);
   }
 
+  //загрузка из session storage, чтобы при обновлении не слетали пары
   initPairs() {
     if (!sessionStorage.getItem('userPairs')) {
       sessionStorage.setItem('userPairs', JSON.stringify(initialPairs));
@@ -33,7 +34,7 @@ class CurrenciesStore {
   }
 
   get options() {
-    return this.currencies.map((currency) => currency.label);
+    return this.currencies.slice().filter((currency) => currency.code !== 'SLE'); //фильтрация чтобы не было повторяющегося значения
   }
 
   get allRates() {
@@ -60,15 +61,15 @@ class CurrenciesStore {
     const existedRateIndex = this.rates.findIndex(
       (el) => rate.base_code === el.base_code && rate.target_code === el.target_code,
     );
+    //если курса для пары нет, добавляет, если уже есть все равно обновляем, но только сам курс
     if (existedRateIndex === -1) {
       this.addRate(rate);
-      console.log('нет пары', this.allRates);
     } else {
       this.updateRate(existedRateIndex, rate.conversion_rate);
-      console.log('есть пара', this.allRates);
     }
   }
 
+  //индекс для доступа к актуальному курсу
   findRateIndex(base: string, target: string) {
     return this.rates.findIndex(
       (rate) => rate.base_code === base && rate.target_code === target,

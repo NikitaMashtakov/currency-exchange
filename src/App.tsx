@@ -20,15 +20,27 @@ export const App = observer(() => {
   return (
     <div className={styles.container}>
       <h1 className={styles.header}>Посчитай курс валют</h1>
-
-      {isLoading ? (
-        <CircularProgress color="inherit" size={50} />
-      ) : (
-        userPairs.map((pair: Pair) => <PairElement key={pair.id} pair={pair} />)
-      )}
-
-      <Button sx={{ margin: 'auto', border: '1px solid gray' }} onClick={addUserPair}>
-        Добавить
+      <div className={styles.gridContainer}>
+        {isLoading ? (
+          <CircularProgress
+            color="inherit"
+            size={50}
+            sx={{ margin: 'auto', marginTop: '10px', marginBottom: '10px' }}
+          />
+        ) : (
+          <>
+            {userPairs.map((pair: Pair) => (
+              <PairElement key={pair.id} pair={pair} />
+            ))}
+          </>
+        )}
+      </div>
+      <Button
+        sx={{ margin: 'auto', border: '1px solid #cbcbcb' }}
+        disabled={isLoading}
+        onClick={addUserPair}
+      >
+        Добавить валютную пару
       </Button>
     </div>
   );

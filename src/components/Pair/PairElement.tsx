@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState, type FC, type SyntheticEvent } from 'react';
+import { useCallback, useEffect, useState, type FC } from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
 import { getPairRate } from '../../api/httpClient';
 import { observer } from 'mobx-react-lite';
 import { currenciesStore } from '../../store';
-import { type Pair } from '../../types/types';
+import { type Currency, type Pair } from '../../types/types';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 
 type CurrencyState = {
   code: string | null;
@@ -40,7 +43,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
     deleteUserPair,
     updateUserPair,
   } = currenciesStore;
-
+  //хэндлеры для разгрузки кода ниже
   const firstInputHandler = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     if (target.value === '') {
       setFirstCurrency((prev) => ({ ...prev, amount: 0 }));
@@ -75,20 +78,20 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
   const updateExchange = useCallback(async () => {
     if (firstCurrency.code && secondCurrency.code) {
       setIsLoading(true);
-      const rate = await getPairRate(firstCurrency.code, secondCurrency.code);
-      updateRatesList(rate);
-      const index = findRateIndex(firstCurrency.code, secondCurrency.code);
-      console.log(`index of rate in ${pair.id} component: ${index}`);
-      setRateIndex(index);
-      updateUserPair(pair.id, firstCurrency.code, secondCurrency.code);
-      if (firstCurrency.amount) {
-        setSecondCurrency((prev) => ({
-          ...prev,
-          amount: Number((firstCurrency.amount * rate.conversion_rate).toFixed(2)),
-        }));
+      const rate = await getPairRate(firstCurrency.code, secondCurrency.code); //ожидание загрузки курса
+      if (rate) {
+        updateRatesList(rate);
+        const index = findRateIndex(firstCurrency.code, secondCurrency.code); //индекс для дальнейшего доступа к курсу
+        setRateIndex(index);
+        updateUserPair(pair.id, firstCurrency.code, secondCurrency.code);
+        if (firstCurrency.amount) {
+          setSecondCurrency((prev) => ({
+            ...prev,
+            amount: Number((firstCurrency.amount * rate.conversion_rate).toFixed(2)), //здесь курс не через индекс, потому что сеттер еще не отработал
+          }));
+        }
       }
       setIsLoading(false);
-      console.log(`effect in ${pair.id} pair`);
     }
   }, [firstCurrency.code, secondCurrency.code]);
 
@@ -97,69 +100,197 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
   }, [updateExchange]);
 
   return (
-    <div
+    <Paper
       style={{
+        margin: 'auto',
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
         gap: '10px',
         padding: '20px',
         justifyContent: 'center',
+        width: 'max-content',
       }}
     >
-      <TextField
-        id={`first-amount-${pair.id}`}
-        label="Сумма"
-        value={firstCurrency.amount}
-        onChange={firstInputHandler}
-        sx={{ width: 200 }}
-      />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '10px',
+          padding: '20px',
+          justifyContent: 'center',
+        }}
+      >
+        <TextField
+          id={`first-amount-${pair.id}`}
+          label="Сумма"
+          value={firstCurrency.amount}
+          onChange={firstInputHandler}
+          sx={{ width: 200 }}
+        />
 
-      <Autocomplete
-        id={`first-currency-${pair.id}`}
-        options={options}
-        sx={{ width: 200 }}
-        value={firstCurrency.code}
-        inputValue={firstCurrency.inputValue}
-        onChange={(event: SyntheticEvent<Element, Event>, newValue: string | null) => {
-          setFirstCurrency((prev) => ({ ...prev, code: newValue }));
+        <Autocomplete
+          id={`first-currency-${pair.id}`}
+          options={options}
+          getOptionLabel={(option: Currency) => option.name}
+          filterOptions={(filteredOptions, { inputValue }) => {
+            const lowerCasedInput = inputValue.toLowerCase();
+            return filteredOptions.filter(
+              (option) =>
+                option.name.toLowerCase().includes(lowerCasedInput) || // Поиск по названию
+                option.code.toLowerCase().includes(lowerCasedInput), // Поиск по коду
+            );
+          }}
+          sx={{ width: 200 }}
+          value={options.find((option) => option.code === firstCurrency.code) || null}
+          inputValue={firstCurrency.inputValue}
+          onChange={(event, newValue: Currency | null) => {
+            if (newValue) {
+              setFirstCurrency((prev: CurrencyState) => ({
+                ...prev,
+                code: newValue.code,
+              }));
+            } else {
+              setFirstCurrency((prev: CurrencyState) => ({ ...prev, code: '' }));
+            }
+          }}
+          onInputChange={(event, newInputValue) => {
+            setFirstCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
+          }}
+          renderOption={(props, option) => {
+            const { key, ...optionProps } = props;
+            return (
+              <Box
+                key={key}
+                component="li"
+                sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                {...optionProps}
+              >
+                <img
+                  loading="lazy"
+                  width="20"
+                  srcSet={`https://flagcdn.com/w40/${option.label.toLowerCase()}.png 2x`}
+                  src={`https://flagcdn.com/w20/${option.label.toLowerCase()}.png`}
+                  alt=""
+                />
+                {option.name} ({option.code})
+              </Box>
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Выберите валюту"
+              slotProps={{
+                htmlInput: {
+                  ...params.inputProps,
+                  autoComplete: 'new-password', // disable autocomplete and autofill
+                },
+              }}
+            />
+          )}
+        />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '10px',
+          padding: '20px',
+          justifyContent: 'center',
         }}
-        onInputChange={(event, newInputValue) => {
-          setFirstCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
-        }}
-        renderInput={(params) => <TextField {...params} label="Выберите валюту" />}
-      />
+      >
+        <TextField
+          id={`second-amount-${pair.id}`}
+          label="Сумма"
+          value={secondCurrency.amount}
+          onChange={secondInputHandler}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <>{isLoading ? <CircularProgress color="inherit" size={20} /> : null}</>
+              ),
+            },
+          }}
+          sx={{ width: 200 }}
+        />
 
-      <Autocomplete
-        id={`second-currency-${pair.id}`}
-        options={options}
-        sx={{ width: 200 }}
-        value={secondCurrency.code}
-        inputValue={secondCurrency.inputValue}
-        onChange={(event: SyntheticEvent<Element, Event>, newValue: string | null) => {
-          setSecondCurrency((prev) => ({ ...prev, code: newValue }));
-        }}
-        onInputChange={(event, newInputValue) => {
-          setSecondCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
-        }}
-        renderInput={(params) => <TextField {...params} label="Выберите валюту" />}
-      />
+        <Autocomplete
+          id={`second-currency-${pair.id}`}
+          options={options}
+          getOptionLabel={(option: Currency) => option.name}
+          filterOptions={(filteredOptions, { inputValue }) => {
+            const lowerCasedInput = inputValue.toLowerCase();
+            return filteredOptions.filter(
+              (option) =>
+                option.name.toLowerCase().includes(lowerCasedInput) || // Поиск по названию
+                option.code.toLowerCase().includes(lowerCasedInput), // Поиск по коду
+            );
+          }}
+          sx={{ width: 200 }}
+          value={options.find((option) => option.code === secondCurrency.code) || null}
+          inputValue={secondCurrency.inputValue}
+          onChange={(event, newValue: Currency | null) => {
+            if (newValue) {
+              setSecondCurrency((prev: CurrencyState) => ({
+                ...prev,
+                code: newValue.code,
+              }));
+            } else {
+              setSecondCurrency((prev: CurrencyState) => ({ ...prev, code: '' }));
+            }
+          }}
+          onInputChange={(event, newInputValue) => {
+            setSecondCurrency((prev) => ({ ...prev, inputValue: newInputValue }));
+          }}
+          renderOption={(props, option) => {
+            // const uniqueKey = option.code;
+            const { key, ...optionProps } = props;
+            return (
+              <Box
+                key={key}
+                component="li"
+                sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                {...optionProps}
+              >
+                <img
+                  loading="lazy"
+                  width="20"
+                  srcSet={`https://flagcdn.com/w40/${option.label.toLowerCase()}.png 2x`}
+                  src={`https://flagcdn.com/w20/${option.label.toLowerCase()}.png`}
+                  alt=""
+                />
+                {option.name} ({option.code})
+              </Box>
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Выберите валюту"
+              slotProps={{
+                htmlInput: {
+                  ...params.inputProps,
+                  autoComplete: 'new-password', // disable autocomplete and autofill
+                },
+              }}
+            />
+          )}
+        />
+      </div>
 
-      <TextField
-        id={`second-amount-${pair.id}`}
-        label="Сумма"
-        value={secondCurrency.amount}
-        onChange={secondInputHandler}
-        slotProps={{
-          input: {
-            endAdornment: (
-              <>{isLoading ? <CircularProgress color="inherit" size={20} /> : null}</>
-            ),
+      <Button
+        onClick={() => deleteUserPair(pair.id)}
+        sx={{
+          margin: 'auto',
+          width: '50px',
+          '&:hover': {
+            color: 'red',
           },
         }}
-        sx={{ width: 200 }}
-      />
-      <Button onClick={() => deleteUserPair(pair.id)}>X</Button>
-    </div>
+      >
+        <ClearOutlinedIcon />
+      </Button>
+    </Paper>
   );
 });
 
