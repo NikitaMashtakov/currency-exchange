@@ -115,9 +115,9 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        padding: '20px',
-        justifyContent: 'center',
-        width: 'max-content',
+        padding: '10px',
+        maxWidth: '100%',
+        width: '100%',
       }}
     >
       <div
@@ -125,8 +125,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
           display: 'flex',
           flexDirection: 'row',
           gap: '10px',
-          padding: '20px',
-          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <TextField
@@ -134,7 +133,11 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
           label="Сумма"
           value={firstCurrency.amount}
           onChange={firstInputHandler}
-          sx={{ width: 200 }}
+          sx={{
+            flexGrow: 1,
+            minWidth: '100px',
+          }}
+          size="small"
         />
 
         <Autocomplete
@@ -149,7 +152,11 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
                 option.code.toLowerCase().includes(lowerCasedInput), // Поиск по коду
             );
           }}
-          sx={{ width: 200 }}
+          sx={{
+            flexGrow: 1,
+            minWidth: '190px',
+            width: '50%',
+          }}
           value={options.find((option) => option.code === firstCurrency.code) || null}
           inputValue={firstCurrency.inputValue}
           onChange={(_, newValue: Currency | null) => {
@@ -197,6 +204,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
               }}
             />
           )}
+          size="small"
         />
       </div>
       <div
@@ -204,8 +212,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
           display: 'flex',
           flexDirection: 'row',
           gap: '10px',
-          padding: '20px',
-          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <TextField
@@ -220,7 +227,11 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
               ),
             },
           }}
-          sx={{ width: 200 }}
+          sx={{
+            flexGrow: 1,
+            minWidth: '80px',
+          }}
+          size="small"
         />
 
         <Autocomplete
@@ -235,7 +246,11 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
                 option.code.toLowerCase().includes(lowerCasedInput), // Поиск по коду
             );
           }}
-          sx={{ width: 200 }}
+          sx={{
+            flexGrow: 1,
+            minWidth: '190px',
+            width: '50%',
+          }}
           value={options.find((option) => option.code === secondCurrency.code) || null}
           inputValue={secondCurrency.inputValue}
           onChange={(_, newValue: Currency | null) => {
@@ -284,6 +299,7 @@ export const PairElement: FC<Props> = observer(({ pair }) => {
               }}
             />
           )}
+          size="small"
         />
       </div>
 
