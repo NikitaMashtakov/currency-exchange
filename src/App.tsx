@@ -1,22 +1,48 @@
-import type { FC } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './App.module.css';
 import PairElement from './components/Pair/PairElement';
 import { currenciesStore } from './store';
 import Button from '@mui/material/Button';
 import { observer } from 'mobx-react-lite';
 import type { Pair } from './types/types';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export const App = observer(() => {
-  const { userPairs, newUserPair } = currenciesStore;
-  const savedPairs = JSON.parse(sessionStorage.getItem('userPairs') || '');
+  const [isLoading, setIsLoading] = useState<boolean>();
+
+  const { userPairs, addUserPair } = currenciesStore;
+
+  useEffect(() => {
+    setIsLoading(true);
+    currenciesStore.initStore().then(() => setIsLoading(false));
+  }, []);
+
   return (
-    <>
-      <h1>Посчитай курс валют</h1>
-      {savedPairs.map((pair: Pair) => (
-        <PairElement key={pair.id} pair={pair} />
-      ))}
-      <Button onClick={newUserPair}>добавить</Button>
-    </>
+    <div className={styles.container}>
+      <h1 className={styles.header}>Посчитай курс валют</h1>
+      <div className={styles.gridContainer}>
+        {isLoading ? (
+          <CircularProgress
+            color="inherit"
+            size={50}
+            sx={{ margin: 'auto', marginTop: '10px', marginBottom: '10px' }}
+          />
+        ) : (
+          <>
+            {userPairs.map((pair: Pair) => (
+              <PairElement key={pair.id} pair={pair} />
+            ))}
+          </>
+        )}
+      </div>
+      <Button
+        sx={{ margin: 'auto', border: '1px solid #cbcbcb' }}
+        disabled={isLoading}
+        onClick={addUserPair}
+      >
+        Добавить валютную пару
+      </Button>
+    </div>
   );
 });
 

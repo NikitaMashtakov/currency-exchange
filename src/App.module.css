@@ -1,10 +1,24 @@
 .container {
-  width: 320px;
   margin: auto;
   margin-top: 20px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  align-items: start;
   justify-content: center;
   gap: 10px;
+}
+
+.header {
+  margin: auto;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  @media (width<1000px) {
+    display: flex;
+    flex-direction: column;
+  }
 }
